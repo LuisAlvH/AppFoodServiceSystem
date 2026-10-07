@@ -1,0 +1,2 @@
+ALTER TABLE usuarios
+ALTER COLUMN firebase_uid TYPE VARCHAR(128);

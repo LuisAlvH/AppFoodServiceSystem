@@ -1,0 +1,23 @@
+spring:
+  config:
+    import: optional:file:./.env[.properties]
+
+  application:
+    name: restaurant-api
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true # show-sql = false para no mostrar las consultas SQL en la consola[Produccion]
+    open-in-view: false
+
+  flyway:
+    enabled: true
+
+firebase:
+  credentials-path: ${FIREBASE_CREDENTIALS_PATH:credentials/firebase-service-account.json}
