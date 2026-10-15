@@ -59,15 +59,12 @@ public class AuthController {
                         HttpServletRequest request) {
 
                 Object attribute = request.getAttribute(
-                                FirebaseAuthInterceptor.ATTR_FIREBASE_TOKEN);
+                                FirebaseAuthInterceptor.ATTR_USUARIO_AUTENTICADO);
 
-                if (!(attribute instanceof FirebaseToken firebaseToken)) {
-                        throw new TokenInvalidoException("Token de Firebase no encontrado");
+                if (!(attribute instanceof Usuario usuario)) {
+                        throw new TokenInvalidoException(
+                                        "Usuario autenticado no encontrado en la petición");
                 }
-
-                String uid = firebaseToken.getUid();
-
-                Usuario usuario = usuarioService.obtenerUsuarioPorFirebaseUid(uid);
 
                 UserResponse userResponse = new UserResponse(
                                 usuario.getIdUsuario(),

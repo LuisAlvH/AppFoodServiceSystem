@@ -12,6 +12,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import com.restaurant.restaurant_api.entity.EstadoUsuario;
@@ -133,6 +134,7 @@ public class UsuarioServiceTest {
 
         @Nested
         class ObtenerOCrearUsuarioTest {
+
                 @Test
                 void usuarioInexistente_CrearUsuario() {
                         UsuarioRepository repository = mock(UsuarioRepository.class);
@@ -141,38 +143,55 @@ public class UsuarioServiceTest {
                         String uid = "UID_inexistente";
                         String email = "nuevo@gmail.com";
 
-                        when(repository.findByFirebaseUid("UID_inexistente"))
+                        when(repository.findByFirebaseUid(uid))
                                         .thenReturn(Optional.empty());
+
                         Usuario usuarioGuardado = new Usuario(uid, email);
                         usuarioGuardado.setEstado(EstadoUsuario.ACTIVO);
-                        when(repository.save(any(Usuario.class))).thenReturn(usuarioGuardado);
 
+                        when(repository.save(any(Usuario.class)))
+                                        .thenReturn(usuarioGuardado);
+
+                        // Ejecutar el servicio
                         ResultadoSync resultado = usuarioService.obtenerOCrearUsuario(uid, email);
+
+                        // Comprobar el resultado del servicio
                         assertTrue(resultado.creado());
                         assertEquals(usuarioGuardado, resultado.usuario());
+
+                        // Capturar el objeto que el servicio envió a save()
+                        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
+
                         verify(repository).findByFirebaseUid(uid);
-                        verify(repository).save(any(Usuario.class));
+                        verify(repository).save(captor.capture());
+
+                        // Obtener el objeto capturado
+                        Usuario usuarioEnviado = captor.getValue();
+
+                        // Comprobar los datos enviados a persistencia
+                        assertEquals(uid, usuarioEnviado.getFirebaseUid());
+                        assertEquals(email, usuarioEnviado.getEmail());
+                        assertNotNull(usuarioEnviado.getUltimoAcceso());
 
                         System.out.println("""
-
                                         ========================================
-                                        TEST: ObtenerOCrearUsuarioTest - usuarioInexistente_creaUsuario
+                                        TEST: ObtenerOCrearUsuarioTest - usuarioInexistente_CrearUsuario
                                         ========================================
                                         [OK] RESULTADO: PASO
 
-                                        UID enviado   : %s
-                                        Email         : %s
-                                        Creado        : %s
-                                        Estado        : %s
-
+                                        UID enviado       : %s
+                                        Email             : %s
+                                        Creado            : %s
+                                        Estado devuelto   : %s
+                                        Último acceso     : %s
 
                                         ========================================
                                         """.formatted(
-                                        uid,
-                                        email,
+                                        usuarioEnviado.getFirebaseUid(),
+                                        usuarioEnviado.getEmail(),
                                         resultado.creado(),
-                                        resultado.usuario().getEstado()));
-
+                                        resultado.usuario().getEstado(),
+                                        usuarioEnviado.getUltimoAcceso()));
                 }
 
                 @Test

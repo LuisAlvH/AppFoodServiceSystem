@@ -4,7 +4,7 @@ import com.google.firebase.auth.FirebaseToken;
 import com.restaurant.restaurant_api.service.FirebaseAuthService;
 import com.restaurant.restaurant_api.service.UsuarioService;
 import com.restaurant.restaurant_api.exception.TokenInvalidoException;
-
+import com.restaurant.restaurant_api.entity.Usuario;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -14,6 +14,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @Component
 public class FirebaseAuthInterceptor implements HandlerInterceptor {
     public static final String ATTR_FIREBASE_TOKEN = "firebaseToken";
+    public static final String ATTR_USUARIO_AUTENTICADO = "usuarioAutenticado";
     private final FirebaseAuthService firebaseAuthService;
     private final UsuarioService usuarioService;
 
@@ -37,12 +38,15 @@ public class FirebaseAuthInterceptor implements HandlerInterceptor {
                 FirebaseAuthInterceptor.ATTR_FIREBASE_TOKEN,
                 firebaseToken);
 
-        if (!request.getServletPath().equals("/api/auth/sync")) {
+        if (!request.getRequestURI().equals("/api/auth/sync")) {
 
-            usuarioService.obtenerUsuarioPorFirebaseUid(
+            Usuario usuario = usuarioService.obtenerUsuarioPorFirebaseUid(
                     firebaseToken.getUid());
-        }
 
+            request.setAttribute(
+                    ATTR_USUARIO_AUTENTICADO,
+                    usuario);
+        }
         return true;
     }
 

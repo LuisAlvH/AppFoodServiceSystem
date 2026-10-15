@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.google.firebase.ErrorCode;
 import com.google.firebase.auth.AuthErrorCode;
+import com.restaurant.restaurant_api.exception.FirebaseNoDisponibleException;
 import com.restaurant.restaurant_api.exception.TokenInvalidoException;
 import com.restaurant.restaurant_api.exception.UsuarioBloqueadoException;
 import com.google.firebase.auth.FirebaseAuth;
@@ -23,129 +25,218 @@ import com.google.firebase.auth.FirebaseAuthException;
 @ExtendWith(MockitoExtension.class)
 public class FirebaseAuthServiceTest {
 
-    @Mock
-    FirebaseAuth firebaseAuth;
+        @Mock
+        FirebaseAuth firebaseAuth;
 
-    @InjectMocks
-    FirebaseAuthService firebaseAuthService;
+        @InjectMocks
+        FirebaseAuthService firebaseAuthService;
 
-    @Test
-    void deberiaDevolverFirebaseTokenCuandoElTokenEsValido()
-            throws FirebaseAuthException {
+        @Nested
+        class ValidacionExitosa {
+                @Test
+                void deberiaDevolverFirebaseTokenCuandoElTokenEsValido()
+                                throws FirebaseAuthException {
 
-        System.out.println(
-                "TEST: Se mockea FirebaseAuth para simular una validación exitosa del token " +
-                        "y se verifica que FirebaseAuthService devuelva el mismo FirebaseToken.");
+                        System.out.println(
+                                        "TEST: Se mockea FirebaseAuth para simular una validación exitosa del token " +
+                                                        "y se verifica que FirebaseAuthService devuelva el mismo FirebaseToken.");
 
-        String idToken = "token-valido";
+                        String idToken = "token-valido";
 
-        FirebaseToken firebaseToken = mock(FirebaseToken.class);
+                        FirebaseToken firebaseToken = mock(FirebaseToken.class);
 
-        when(firebaseAuth.verifyIdToken(idToken, true))
-                .thenReturn(firebaseToken);
+                        when(firebaseAuth.verifyIdToken(idToken, true))
+                                        .thenReturn(firebaseToken);
 
-        FirebaseToken resultado = firebaseAuthService.verifyToken(idToken);
+                        FirebaseToken resultado = firebaseAuthService.verifyToken(idToken);
 
-        assertSame(firebaseToken, resultado);
-    }
+                        assertSame(firebaseToken, resultado);
+                }
 
-    @Test
-    void deberiaLanzarTokenInvalidoCuandoElTokenEsInvalido()
-            throws FirebaseAuthException {
+        }
 
-        System.out.println(
-                "TEST: Se mockea FirebaseAuth para simular un token inválido " +
-                        "y se verifica que FirebaseAuthService lance TokenInvalidoException.");
+        @Nested
+        class ErroresDeToken {
 
-        String idToken = "token-invalido";
+                @Test
+                void deberiaLanzarTokenInvalidoCuandoElTokenEsInvalido()
+                                throws FirebaseAuthException {
 
-        FirebaseAuthException excepcion = new FirebaseAuthException(
-                ErrorCode.INVALID_ARGUMENT,
-                "Token inválido",
-                null,
-                null,
-                AuthErrorCode.INVALID_ID_TOKEN);
+                        System.out.println(
+                                        "TEST: Se mockea FirebaseAuth para simular un token inválido " +
+                                                        "y se verifica que FirebaseAuthService lance TokenInvalidoException.");
 
-        when(firebaseAuth.verifyIdToken(idToken, true))
-                .thenThrow(excepcion);
+                        String idToken = "token-invalido";
 
-        assertThrows(
-                TokenInvalidoException.class,
-                () -> firebaseAuthService.verifyToken(idToken));
-    }
+                        FirebaseAuthException excepcion = new FirebaseAuthException(
+                                        ErrorCode.INVALID_ARGUMENT,
+                                        "Token inválido",
+                                        null,
+                                        null,
+                                        AuthErrorCode.INVALID_ID_TOKEN);
 
-    @Test
-    void deberiaLanzarTokenInvalidoCuandoElTokenEstaExpirado()
-            throws FirebaseAuthException {
+                        when(firebaseAuth.verifyIdToken(idToken, true))
+                                        .thenThrow(excepcion);
 
-        System.out.println(
-                "TEST: Se mockea FirebaseAuth para simular un token expirado " +
-                        "y se verifica que FirebaseAuthService lance TokenInvalidoException.");
+                        assertThrows(
+                                        TokenInvalidoException.class,
+                                        () -> firebaseAuthService.verifyToken(idToken));
+                }
 
-        String idToken = "token-expirado";
+                @Test
+                void deberiaLanzarTokenInvalidoCuandoElTokenEstaExpirado()
+                                throws FirebaseAuthException {
 
-        FirebaseAuthException excepcion = new FirebaseAuthException(
-                ErrorCode.INVALID_ARGUMENT,
-                "Token expirado",
-                null,
-                null,
-                AuthErrorCode.EXPIRED_ID_TOKEN);
+                        System.out.println(
+                                        "TEST: Se mockea FirebaseAuth para simular un token expirado " +
+                                                        "y se verifica que FirebaseAuthService lance TokenInvalidoException.");
 
-        when(firebaseAuth.verifyIdToken(idToken, true))
-                .thenThrow(excepcion);
+                        String idToken = "token-expirado";
 
-        assertThrows(
-                TokenInvalidoException.class,
-                () -> firebaseAuthService.verifyToken(idToken));
-    }
+                        FirebaseAuthException excepcion = new FirebaseAuthException(
+                                        ErrorCode.INVALID_ARGUMENT,
+                                        "Token expirado",
+                                        null,
+                                        null,
+                                        AuthErrorCode.EXPIRED_ID_TOKEN);
 
-    @Test
-    void deberiaLanzarTokenInvalidoCuandoElTokenEstaRevocado()
-            throws FirebaseAuthException {
+                        when(firebaseAuth.verifyIdToken(idToken, true))
+                                        .thenThrow(excepcion);
 
-        System.out.println(
-                "TEST: Se mockea FirebaseAuth para simular un token revocado " +
-                        "y se verifica que FirebaseAuthService lance TokenInvalidoException.");
+                        assertThrows(
+                                        TokenInvalidoException.class,
+                                        () -> firebaseAuthService.verifyToken(idToken));
+                }
 
-        String idToken = "token-revocado";
+                @Test
+                void deberiaLanzarTokenInvalidoCuandoElTokenEstaRevocado()
+                                throws FirebaseAuthException {
 
-        FirebaseAuthException excepcion = new FirebaseAuthException(
-                ErrorCode.INVALID_ARGUMENT,
-                "Token revocado",
-                null,
-                null,
-                AuthErrorCode.REVOKED_ID_TOKEN);
+                        System.out.println(
+                                        "TEST: Se mockea FirebaseAuth para simular un token revocado " +
+                                                        "y se verifica que FirebaseAuthService lance TokenInvalidoException.");
 
-        when(firebaseAuth.verifyIdToken(idToken, true))
-                .thenThrow(excepcion);
+                        String idToken = "token-revocado";
 
-        assertThrows(
-                TokenInvalidoException.class,
-                () -> firebaseAuthService.verifyToken(idToken));
-    }
+                        FirebaseAuthException excepcion = new FirebaseAuthException(
+                                        ErrorCode.INVALID_ARGUMENT,
+                                        "Token revocado",
+                                        null,
+                                        null,
+                                        AuthErrorCode.REVOKED_ID_TOKEN);
 
-    @Test
-    void deberiaLanzarUsuarioBloqueadoCuandoElUsuarioEstaDeshabilitado()
-            throws FirebaseAuthException {
+                        when(firebaseAuth.verifyIdToken(idToken, true))
+                                        .thenThrow(excepcion);
 
-        System.out.println(
-                "TEST: Se mockea FirebaseAuth para simular un usuario deshabilitado " +
-                        "y se verifica que FirebaseAuthService lance UsuarioBloqueadoException.");
+                        assertThrows(
+                                        TokenInvalidoException.class,
+                                        () -> firebaseAuthService.verifyToken(idToken));
+                }
 
-        String idToken = "token-usuario-bloqueado";
+        }
 
-        FirebaseAuthException excepcion = new FirebaseAuthException(
-                ErrorCode.INVALID_ARGUMENT,
-                "Usuario deshabilitado",
-                null,
-                null,
-                AuthErrorCode.USER_DISABLED);
+        @Nested
+        class UsuarioBloqueado {
 
-        when(firebaseAuth.verifyIdToken(idToken, true))
-                .thenThrow(excepcion);
+                @Test
+                void deberiaLanzarUsuarioBloqueadoCuandoElUsuarioEstaDeshabilitado()
+                                throws FirebaseAuthException {
 
-        assertThrows(
-                UsuarioBloqueadoException.class,
-                () -> firebaseAuthService.verifyToken(idToken));
-    }
+                        System.out.println(
+                                        "TEST: Se mockea FirebaseAuth para simular un usuario deshabilitado " +
+                                                        "y se verifica que FirebaseAuthService lance UsuarioBloqueadoException.");
+
+                        String idToken = "token-usuario-bloqueado";
+
+                        FirebaseAuthException excepcion = new FirebaseAuthException(
+                                        ErrorCode.INVALID_ARGUMENT,
+                                        "Usuario deshabilitado",
+                                        null,
+                                        null,
+                                        AuthErrorCode.USER_DISABLED);
+
+                        when(firebaseAuth.verifyIdToken(idToken, true))
+                                        .thenThrow(excepcion);
+
+                        assertThrows(
+                                        UsuarioBloqueadoException.class,
+                                        () -> firebaseAuthService.verifyToken(idToken));
+                }
+
+        }
+
+        @Nested
+        class FirebaseNoDisponible {
+                @Test
+                void deberiaLanzarFirebaseNoDisponibleCuandoOcurreUnavailable()
+                                throws FirebaseAuthException {
+
+                        System.out.println(
+                                        "TEST: Se simula el error UNAVAILABLE de Firebase.");
+
+                        String idToken = "token-unavailable";
+
+                        FirebaseAuthException excepcion = new FirebaseAuthException(
+                                        ErrorCode.UNAVAILABLE,
+                                        "Servicio de Firebase no disponible",
+                                        null,
+                                        null,
+                                        null);
+
+                        when(firebaseAuth.verifyIdToken(idToken, true)).thenThrow(excepcion);
+
+                        assertThrows(FirebaseNoDisponibleException.class,
+                                        () -> firebaseAuthService.verifyToken(idToken));
+                }
+
+                @Test
+                void deberiaLanzarFirebaseNoDisponibleCuandoOcurreInternal()
+                                throws FirebaseAuthException {
+
+                        System.out.println(
+                                        "TEST: Se simula el error INTERNAL de Firebase.");
+
+                        String idToken = "token-internal";
+
+                        FirebaseAuthException excepcion = new FirebaseAuthException(
+                                        ErrorCode.INTERNAL,
+                                        "Error interno de Firebase",
+                                        null,
+                                        null,
+                                        null);
+
+                        when(firebaseAuth.verifyIdToken(idToken, true)).thenThrow(excepcion);
+
+                        assertThrows(FirebaseNoDisponibleException.class,
+                                        () -> firebaseAuthService.verifyToken(idToken));
+                }
+
+        }
+
+        @Nested
+        class ErroresNoClasificados {
+
+                @Test
+                void deberiaLanzarTokenInvalidoCuandoElErrorNoEstaClasificado()
+                                throws FirebaseAuthException {
+
+                        System.out.println(
+                                        "TEST: Se simula un error no clasificado de Firebase.");
+
+                        String idToken = "token-error-no-clasificado";
+
+                        FirebaseAuthException excepcion = new FirebaseAuthException(
+                                        ErrorCode.PERMISSION_DENIED,
+                                        "Error no contemplado",
+                                        null,
+                                        null,
+                                        null);
+
+                        when(firebaseAuth.verifyIdToken(idToken, true)).thenThrow(excepcion);
+
+                        assertThrows(TokenInvalidoException.class, () -> firebaseAuthService.verifyToken(idToken));
+                }
+
+        }
+
 }

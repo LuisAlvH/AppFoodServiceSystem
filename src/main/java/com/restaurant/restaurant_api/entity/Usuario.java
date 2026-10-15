@@ -44,6 +44,12 @@ public class Usuario {
         this.email = email;
     }
 
+    public Usuario(Integer idUsuario, String firebaseUid, String email) {
+        this.idUsuario = idUsuario;
+        this.firebaseUid = firebaseUid;
+        this.email = email;
+    }
+
     @PrePersist // Se ejecuta antes de insertar un nuevo registro en la base de datos
     protected void actualizarFechasAntesDeCrear() {
 
